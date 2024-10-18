@@ -2,7 +2,6 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import styled from "styled-components";
 import Home from "./components/screens/Home";
-import RideRequest from "./components/screens/RideRequest";
 import Profile from "./components/screens/Profile";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
@@ -25,7 +24,7 @@ function App() {
         <MainContent>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/ride-request" element={<RideRequest />} />
+            {/* <Route path="/ride-request" element={<RideRequest />} /> 삭제 */}
             <Route path="/profile" element={<Profile />} />
           </Routes>
         </MainContent>

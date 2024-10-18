@@ -35,17 +35,6 @@ const RideForm = styled.form`
   flex-direction: column;
   gap: 16px;
 `;
-
-const InputWithIcon = styled.div`
-  display: flex;
-  align-items: center;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-  padding: 8px;
-  overflow: visible;
-  width: 100%;
-`;
-
 const InputIcon = styled.div`
   width: 30px;
   height: 30px;
@@ -57,6 +46,17 @@ const InputIcon = styled.div`
   flex-shrink: 0;
 `;
 
+
+const InputWithIcon = styled.div`
+  display: flex;
+  align-items: center;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  padding: 8px;
+  width: 100%;
+  flex-grow: 1; /* 컨테이너가 화면 크기에 맞게 늘어나도록 설정 */
+  max-width: 100%; /* 최대 너비를 100%로 설정 */
+`;
 const StyledInput = styled.input`
   flex: 1;
   border: none;
@@ -64,6 +64,9 @@ const StyledInput = styled.input`
   font-size: 16px;
   width: 100%;
   min-width: 0;
+  white-space: nowrap; /* 줄바꿈 방지 */
+  overflow: hidden; /* 넘친 텍스트를 숨김 */
+  text-overflow: ellipsis; /* 넘친 텍스트를 ...으로 표시 */
   &:focus {
     outline: none;
   }

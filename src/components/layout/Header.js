@@ -40,7 +40,6 @@ const Header = () => {
       <Logo to="/">RideShare</Logo>
       <Nav>
         <NavLink to="/">Home</NavLink>
-        <NavLink to="/ride-request">Request Ride</NavLink>
         <NavLink to="/profile">Profile</NavLink>
       </Nav>
     </HeaderContainer>
