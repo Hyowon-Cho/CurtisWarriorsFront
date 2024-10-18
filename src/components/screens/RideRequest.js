@@ -52,7 +52,6 @@ const RideRequest = () => {
     // 실제 앱에서는 이 데이터를 백엔드로 전송하는 로직이 여기에 포함됨
     alert("Ride request submitted successfully!");
   };
-
   return (
     <RideRequestContainer>
       <h1>Request a Ride</h1>
