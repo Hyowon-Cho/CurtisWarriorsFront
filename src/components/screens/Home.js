@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useRef } from "react";
 import styled from "styled-components";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import Map from "../common/Map";
 import LoadingScreen from "./LoadingScreen";
-import { FaMapMarkerAlt } from "react-icons/fa";
+import { FaMapMarkerAlt, FaClock } from "react-icons/fa";
 
 const HomeContainer = styled.div`
   display: flex;
@@ -35,17 +35,6 @@ const RideForm = styled.form`
   flex-direction: column;
   gap: 16px;
 `;
-
-const InputWithIcon = styled.div`
-  display: flex;
-  align-items: center;
-  background-color: #f0f0f0;
-  border-radius: 8px;
-  padding: 8px;
-  overflow: visible;
-  width: 100%;
-`;
-
 const InputIcon = styled.div`
   width: 30px;
   height: 30px;
@@ -57,6 +46,17 @@ const InputIcon = styled.div`
   flex-shrink: 0;
 `;
 
+
+const InputWithIcon = styled.div`
+  display: flex;
+  align-items: center;
+  background-color: #f0f0f0;
+  border-radius: 8px;
+  padding: 8px;
+  width: 100%;
+  flex-grow: 1; /* 컨테이너가 화면 크기에 맞게 늘어나도록 설정 */
+  max-width: 100%; /* 최대 너비를 100%로 설정 */
+`;
 const StyledInput = styled.input`
   flex: 1;
   border: none;
@@ -64,11 +64,13 @@ const StyledInput = styled.input`
   font-size: 16px;
   width: 100%;
   min-width: 0;
+  white-space: nowrap; /* 줄바꿈 방지 */
+  overflow: hidden; /* 넘친 텍스트를 숨김 */
+  text-overflow: ellipsis; /* 넘친 텍스트를 ...으로 표시 */
   &:focus {
     outline: none;
   }
 `;
-
 
 const RequestButton = styled.button`
   background-color: #4CAF50;
@@ -84,12 +86,19 @@ const RequestButton = styled.button`
   }
 `;
 
+const ErrorMessage = styled.div`
+  color: red;
+  font-size: 14px;
+`;
+
 const Home = () => {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [pickupLocation, setPickupLocation] = useState(null);
   const [dropoffLocation, setDropoffLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [maxWaitTime, setMaxWaitTime] = useState("");
+  const [error, setError] = useState("");
 
   const pickupAutocompleteRef = useRef(null);
   const dropoffAutocompleteRef = useRef(null);
@@ -101,10 +110,15 @@ const Home = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (parseInt(maxWaitTime) >= 121) {
+      setError("Maximum wait time cannot exceed 120 minutes.");
+      return;
+    }
+    setError("");
     setIsLoading(true);
   };
 
-  const handlePlaceSelect = useCallback((place, type) => {
+  const handlePlaceSelect = (place, type) => {
     if (place.geometry) {
       const location = {
         lat: place.geometry.location.lat(),
@@ -118,7 +132,7 @@ const Home = () => {
         setDropoffLocation(location);
       }
     }
-  }, []);
+  };
 
   const onPickupLoad = (autocomplete) => {
     pickupAutocompleteRef.current = autocomplete;
@@ -128,20 +142,34 @@ const Home = () => {
     dropoffAutocompleteRef.current = autocomplete;
   };
 
+  const handleMaxWaitTimeChange = (e) => {
+    const value = e.target.value;
+    setMaxWaitTime(value);
+    if (parseInt(value) >= 121) {
+      setError("Maximum wait time cannot exceed 120 minutes.");
+    } else {
+      setError("");
+    }
+  };
+
   if (loadError) return "Error loading maps";
   if (!isLoaded) return "Loading Maps";
 
   if (isLoading) {
-    return <LoadingScreen pickup={pickup} dropoff={dropoff} />;
+    return (
+      <LoadingScreen
+        pickup={pickup}
+        dropoff={dropoff}
+        maxWaitTime={parseInt(maxWaitTime) * 60} // 분을 초로 변환
+        onCancel={() => setIsLoading(false)}
+      />
+    );
   }
 
   return (
     <HomeContainer>
       <MapContainer>
-        <Map 
-          pickupLocation={pickupLocation} 
-          dropoffLocation={dropoffLocation}
-        />
+        <Map pickupLocation={pickupLocation} dropoffLocation={dropoffLocation} />
       </MapContainer>
       <RideFormContainer>
         <RideForm onSubmit={handleSubmit}>
@@ -181,7 +209,24 @@ const Home = () => {
               />
             </Autocomplete>
           </InputWithIcon>
-          <RequestButton type="submit" disabled={!pickup || !dropoff}>
+          <InputWithIcon>
+            <InputIcon color="#FFC107">
+              <FaClock />
+            </InputIcon>
+            <StyledInput
+              type="number"
+              placeholder="Max wait time (minutes)"
+              value={maxWaitTime}
+              onChange={handleMaxWaitTimeChange}
+              min="1"
+              max="120"
+            />
+          </InputWithIcon>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          <RequestButton
+            type="submit"
+            disabled={!pickup || !dropoff || !maxWaitTime || error}
+          >
             Request Ride
           </RequestButton>
         </RideForm>
