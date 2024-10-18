@@ -110,13 +110,14 @@ const Home = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (parseInt(maxWaitTime) >= 121) {
+    if (parseInt(maxWaitTime) >= 121 || parseInt(maxWaitTime) <= 9) {
       setError("Maximum wait time cannot exceed 120 minutes.");
       return;
     }
     setError("");
     setIsLoading(true);
   };
+  
 
   const handlePlaceSelect = (place, type) => {
     if (place.geometry) {
@@ -145,12 +146,13 @@ const Home = () => {
   const handleMaxWaitTimeChange = (e) => {
     const value = e.target.value;
     setMaxWaitTime(value);
-    if (parseInt(value) >= 121) {
-      setError("Maximum wait time cannot exceed 120 minutes.");
+    if (parseInt(value) >= 121 || parseInt(value) <= 9) {
+      setError("Waiting Time should be in 10 ~ 120 minutes.");
     } else {
       setError("");
     }
   };
+  
 
   if (loadError) return "Error loading maps";
   if (!isLoaded) return "Loading Maps";
@@ -185,7 +187,7 @@ const Home = () => {
               }}
             >
               <StyledInput
-                placeholder="Pickup location"
+                placeholder="Pick-Up Location"
                 value={pickup}
                 onChange={(e) => setPickup(e.target.value)}
               />
@@ -203,7 +205,7 @@ const Home = () => {
               }}
             >
               <StyledInput
-                placeholder="Dropoff location"
+                placeholder="Drop-Off Location"
                 value={dropoff}
                 onChange={(e) => setDropoff(e.target.value)}
               />
@@ -215,10 +217,10 @@ const Home = () => {
             </InputIcon>
             <StyledInput
               type="number"
-              placeholder="Max wait time (minutes)"
+              placeholder="Wait Time (minutes)"
               value={maxWaitTime}
               onChange={handleMaxWaitTimeChange}
-              min="1"
+              min="10"
               max="120"
             />
           </InputWithIcon>
