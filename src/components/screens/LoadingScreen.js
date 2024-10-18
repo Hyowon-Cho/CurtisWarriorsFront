@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -40,13 +40,23 @@ const Cloud = styled.div`
   }
 `;
 
-const SVGContainer = styled.svg`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+const Spinner = styled.div`
+  width: 30px;
+  height: 30px;
+  border: 4px solid #fff;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;  /* 텍스트와의 간격 추가 */
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
 `;
 
 const MatchCompleteOverlay = styled.div`
@@ -65,10 +75,9 @@ const MatchCompleteOverlay = styled.div`
 `;
 
 const LoadingMessage = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  display: flex;  /* 원통과 텍스트를 가로로 나란히 배치 */
+  justify-content: center;
+  align-items: center;
   font-size: 32px;
   color: #fff;
   font-weight: bold;
@@ -105,11 +114,12 @@ const LoadingScreen = ({ pickup, dropoff }) => {
       <Cloud style={{ top: "30%", right: "20%" }} />
       <Cloud style={{ bottom: "20%", left: "30%" }} />
       
-      {/* 공 렌더링 삭제 */}
-      {/* <SVGContainer>{renderLines()}</SVGContainer> */}
+      {!matchComplete && (
+        <LoadingMessage>
+          Loading... <Spinner /> {/* 텍스트 옆에 원통형 로딩 애니메이션 */}
+        </LoadingMessage>
+      )}
       
-      {/* 로딩 메시지 추가 */}
-      {!matchComplete && <LoadingMessage>Loading...</LoadingMessage>}
       {matchComplete && (
         <MatchCompleteOverlay>
           <h2>Match Complete!</h2>
@@ -124,4 +134,3 @@ const LoadingScreen = ({ pickup, dropoff }) => {
 };
 
 export default LoadingScreen;
-
