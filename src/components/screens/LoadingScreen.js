@@ -124,3 +124,4 @@ const LoadingScreen = ({ pickup, dropoff }) => {
 };
 
 export default LoadingScreen;
+
