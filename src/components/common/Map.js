@@ -7,6 +7,15 @@ import { MdMyLocation } from "react-icons/md";
 const MapContainer = styled.div`
   width: 100%;
   height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+`;
+
+const MapWrapper = styled.div`
+  width: 100%;
+  height: 100%;
+  position: relative;
 `;
 
 const LocationButton = styled.button`
@@ -129,36 +138,46 @@ const Map = ({ pickupLocation, dropoffLocation }) => {
   if (!isLoaded) return <div>Loading Maps</div>;
 
   return (
-    <MapContainer>
-      <GoogleMap
-        mapContainerStyle={{
-          ...mapContainerStyle,
-          marginLeft: "10px",
-        }}
-        zoom={14}
-        center={currentLocation || { lat: 0, lng: 0 }}
-        options={options}
-        onLoad={onMapLoad}
-      >
-        {currentLocation && <Marker position={currentLocation} icon={currentLocationIcon} />}
-        {pickupLocation && (
-          <Marker
-            position={pickupLocation}
-            icon={{
-              url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
-            }}
-          />
-        )}
-        {dropoffLocation && (
-          <Marker
-            position={dropoffLocation}
-            icon={{
-              url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
-            }}
-          />
-        )}
-      </GoogleMap>
-    </MapContainer>
+    <MapWrapper>
+      <MapContainer>
+        <GoogleMap
+          mapContainerStyle={{
+            ...mapContainerStyle,
+            marginLeft: "10px",
+          }}
+          zoom={14}
+          center={currentLocation || { lat: 0, lng: 0 }}
+          options={{
+            ...options,
+            zoomControlOptions: {
+              position: window.google?.maps?.ControlPosition?.RIGHT_CENTER,
+            },
+            fullscreenControlOptions: {
+              position: window.google?.maps?.ControlPosition?.RIGHT_TOP,
+            },
+          }}
+          onLoad={onMapLoad}
+        >
+          {currentLocation && <Marker position={currentLocation} icon={currentLocationIcon} />}
+          {pickupLocation && (
+            <Marker
+              position={pickupLocation}
+              icon={{
+                url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+              }}
+            />
+          )}
+          {dropoffLocation && (
+            <Marker
+              position={dropoffLocation}
+              icon={{
+                url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+              }}
+            />
+          )}
+        </GoogleMap>
+      </MapContainer>
+    </MapWrapper>
   );
 };
 
