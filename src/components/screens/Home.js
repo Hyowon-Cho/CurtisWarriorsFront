@@ -42,6 +42,8 @@ const InputWithIcon = styled.div`
   background-color: #f0f0f0;
   border-radius: 8px;
   padding: 8px;
+  overflow: visible;
+  width: 100%;
 `;
 
 const InputIcon = styled.div`
@@ -52,6 +54,7 @@ const InputIcon = styled.div`
   align-items: center;
   margin-right: 10px;
   color: ${({ color }) => color};
+  flex-shrink: 0;
 `;
 
 const StyledInput = styled.input`
@@ -59,10 +62,13 @@ const StyledInput = styled.input`
   border: none;
   background: transparent;
   font-size: 16px;
+  width: 100%;
+  min-width: 0;
   &:focus {
     outline: none;
   }
 `;
+
 
 const RequestButton = styled.button`
   background-color: #4CAF50;

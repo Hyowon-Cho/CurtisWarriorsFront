@@ -8,6 +8,9 @@ const RideRequestContainer = styled.div`
   max-width: 500px;
   margin: 0 auto;
   padding: 24px;
+  white-space: nowrap;  /* 텍스트가 한 줄로 나오도록 */
+  overflow: hidden;     /* 넘치는 텍스트 숨기기 */
+  text-overflow: ellipsis; /* 넘치는 부분 '...'으로 표시 */
 `;
 
 const Form = styled.form`
@@ -49,7 +52,6 @@ const RideRequest = () => {
     // 실제 앱에서는 이 데이터를 백엔드로 전송하는 로직이 여기에 포함됨
     alert("Ride request submitted successfully!");
   };
-
   return (
     <RideRequestContainer>
       <h1>Request a Ride</h1>
