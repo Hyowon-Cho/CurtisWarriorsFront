@@ -1,24 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import styled from "styled-components";
+import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import Map from "../common/Map";
-import Input from "../common/Input";
-import Button from "../common/Button";
-import useGeolocation from "../../hooks/useGeolocation";
 import LoadingScreen from "./LoadingScreen";
+import { FaMapMarkerAlt } from "react-icons/fa";
 
 const HomeContainer = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
+  position: relative;
 `;
 
 const MapContainer = styled.div`
   flex: 1;
-  position: relative;
+  width: 100%;
 `;
 
 const RideFormContainer = styled.div`
-  position: absolute;
+  position: sticky;
   bottom: 0;
   left: 0;
   right: 0;
@@ -27,6 +27,7 @@ const RideFormContainer = styled.div`
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 `;
 
 const RideForm = styled.form`
@@ -44,23 +45,85 @@ const InputWithIcon = styled.div`
 `;
 
 const InputIcon = styled.div`
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-right: 10px;
-  background-color: ${({ color }) => color};
+  color: ${({ color }) => color};
+`;
+
+const StyledInput = styled.input`
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  &:focus {
+    outline: none;
+  }
+`;
+
+const RequestButton = styled.button`
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
 `;
 
 const Home = () => {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  const [pickupLocation, setPickupLocation] = useState(null);
+  const [dropoffLocation, setDropoffLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { location } = useGeolocation();
+
+  const pickupAutocompleteRef = useRef(null);
+  const dropoffAutocompleteRef = useRef(null);
+
+  const { isLoaded, loadError } = useLoadScript({
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+    libraries: ["places"],
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
   };
+
+  const handlePlaceSelect = useCallback((place, type) => {
+    if (place.geometry) {
+      const location = {
+        lat: place.geometry.location.lat(),
+        lng: place.geometry.location.lng(),
+      };
+      if (type === "pickup") {
+        setPickup(place.formatted_address);
+        setPickupLocation(location);
+      } else {
+        setDropoff(place.formatted_address);
+        setDropoffLocation(location);
+      }
+    }
+  }, []);
+
+  const onPickupLoad = (autocomplete) => {
+    pickupAutocompleteRef.current = autocomplete;
+  };
+
+  const onDropoffLoad = (autocomplete) => {
+    dropoffAutocompleteRef.current = autocomplete;
+  };
+
+  if (loadError) return "Error loading maps";
+  if (!isLoaded) return "Loading Maps";
 
   if (isLoading) {
     return <LoadingScreen pickup={pickup} dropoff={dropoff} />;
@@ -69,21 +132,52 @@ const Home = () => {
   return (
     <HomeContainer>
       <MapContainer>
-        <Map location={location} />
+        <Map 
+          pickupLocation={pickupLocation} 
+          dropoffLocation={dropoffLocation}
+        />
       </MapContainer>
       <RideFormContainer>
         <RideForm onSubmit={handleSubmit}>
           <InputWithIcon>
-            <InputIcon color="#4CAF50" />
-            <Input placeholder="Pickup location" value={pickup} onChange={(e) => setPickup(e.target.value)} />
+            <InputIcon color="#4CAF50">
+              <FaMapMarkerAlt />
+            </InputIcon>
+            <Autocomplete
+              onLoad={onPickupLoad}
+              onPlaceChanged={() => {
+                const place = pickupAutocompleteRef.current.getPlace();
+                handlePlaceSelect(place, "pickup");
+              }}
+            >
+              <StyledInput
+                placeholder="Pickup location"
+                value={pickup}
+                onChange={(e) => setPickup(e.target.value)}
+              />
+            </Autocomplete>
           </InputWithIcon>
           <InputWithIcon>
-            <InputIcon color="#F44336" />
-            <Input placeholder="Dropoff location" value={dropoff} onChange={(e) => setDropoff(e.target.value)} />
+            <InputIcon color="#F44336">
+              <FaMapMarkerAlt />
+            </InputIcon>
+            <Autocomplete
+              onLoad={onDropoffLoad}
+              onPlaceChanged={() => {
+                const place = dropoffAutocompleteRef.current.getPlace();
+                handlePlaceSelect(place, "dropoff");
+              }}
+            >
+              <StyledInput
+                placeholder="Dropoff location"
+                value={dropoff}
+                onChange={(e) => setDropoff(e.target.value)}
+              />
+            </Autocomplete>
           </InputWithIcon>
-          <Button type="submit" disabled={!pickup || !dropoff}>
+          <RequestButton type="submit" disabled={!pickup || !dropoff}>
             Request Ride
-          </Button>
+          </RequestButton>
         </RideForm>
       </RideFormContainer>
     </HomeContainer>
