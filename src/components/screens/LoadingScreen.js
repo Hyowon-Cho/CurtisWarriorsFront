@@ -103,6 +103,16 @@ const MatchCompleteOverlay = styled.div`
   font-size: 24px;
 `;
 
+const LoadingMessage = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  color: #fff;
+  font-weight: bold;
+`;
+
 const dummyData = [
   { id: 1, x: 20, y: 20, color: "#FF5733" },
   { id: 2, x: 80, y: 20, color: "#33FF57" },
@@ -196,6 +206,8 @@ const LoadingScreen = ({ pickup, dropoff }) => {
           }}
         />
       ))}
+      {/* 로딩 메시지 추가 */}
+      {!matchComplete && <LoadingMessage>Loading...</LoadingMessage>}
       {matchComplete && (
         <MatchCompleteOverlay>
           <h2>Match Complete!</h2>
