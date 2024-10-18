@@ -217,7 +217,7 @@ const Home = () => {
             </InputIcon>
             <StyledInput
               type="number"
-              placeholder="Wait Time (minutes)"
+              placeholder="Waiting Time (minutes)"
               value={maxWaitTime}
               onChange={handleMaxWaitTimeChange}
               min="10"
