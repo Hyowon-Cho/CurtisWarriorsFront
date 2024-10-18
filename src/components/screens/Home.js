@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useRef } from "react";
 import styled from "styled-components";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import Map from "../common/Map";
 import LoadingScreen from "./LoadingScreen";
-import { FaMapMarkerAlt } from "react-icons/fa";
+import { FaMapMarkerAlt, FaClock } from "react-icons/fa";
 
 const HomeContainer = styled.div`
   display: flex;
@@ -69,7 +69,6 @@ const StyledInput = styled.input`
   }
 `;
 
-
 const RequestButton = styled.button`
   background-color: #4CAF50;
   color: white;
@@ -84,12 +83,19 @@ const RequestButton = styled.button`
   }
 `;
 
+const ErrorMessage = styled.div`
+  color: red;
+  font-size: 14px;
+`;
+
 const Home = () => {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [pickupLocation, setPickupLocation] = useState(null);
   const [dropoffLocation, setDropoffLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [maxWaitTime, setMaxWaitTime] = useState("");
+  const [error, setError] = useState("");
 
   const pickupAutocompleteRef = useRef(null);
   const dropoffAutocompleteRef = useRef(null);
@@ -101,10 +107,15 @@ const Home = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (parseInt(maxWaitTime) >= 121) {
+      setError("Maximum wait time cannot exceed 120 minutes.");
+      return;
+    }
+    setError("");
     setIsLoading(true);
   };
 
-  const handlePlaceSelect = useCallback((place, type) => {
+  const handlePlaceSelect = (place, type) => {
     if (place.geometry) {
       const location = {
         lat: place.geometry.location.lat(),
@@ -118,7 +129,7 @@ const Home = () => {
         setDropoffLocation(location);
       }
     }
-  }, []);
+  };
 
   const onPickupLoad = (autocomplete) => {
     pickupAutocompleteRef.current = autocomplete;
@@ -128,20 +139,34 @@ const Home = () => {
     dropoffAutocompleteRef.current = autocomplete;
   };
 
+  const handleMaxWaitTimeChange = (e) => {
+    const value = e.target.value;
+    setMaxWaitTime(value);
+    if (parseInt(value) >= 121) {
+      setError("Maximum wait time cannot exceed 120 minutes.");
+    } else {
+      setError("");
+    }
+  };
+
   if (loadError) return "Error loading maps";
   if (!isLoaded) return "Loading Maps";
 
   if (isLoading) {
-    return <LoadingScreen pickup={pickup} dropoff={dropoff} />;
+    return (
+      <LoadingScreen
+        pickup={pickup}
+        dropoff={dropoff}
+        maxWaitTime={parseInt(maxWaitTime) * 60} // 분을 초로 변환
+        onCancel={() => setIsLoading(false)}
+      />
+    );
   }
 
   return (
     <HomeContainer>
       <MapContainer>
-        <Map 
-          pickupLocation={pickupLocation} 
-          dropoffLocation={dropoffLocation}
-        />
+        <Map pickupLocation={pickupLocation} dropoffLocation={dropoffLocation} />
       </MapContainer>
       <RideFormContainer>
         <RideForm onSubmit={handleSubmit}>
@@ -181,7 +206,24 @@ const Home = () => {
               />
             </Autocomplete>
           </InputWithIcon>
-          <RequestButton type="submit" disabled={!pickup || !dropoff}>
+          <InputWithIcon>
+            <InputIcon color="#FFC107">
+              <FaClock />
+            </InputIcon>
+            <StyledInput
+              type="number"
+              placeholder="Max wait time (minutes)"
+              value={maxWaitTime}
+              onChange={handleMaxWaitTimeChange}
+              min="1"
+              max="120"
+            />
+          </InputWithIcon>
+          {error && <ErrorMessage>{error}</ErrorMessage>}
+          <RequestButton
+            type="submit"
+            disabled={!pickup || !dropoff || !maxWaitTime || error}
+          >
             Request Ride
           </RequestButton>
         </RideForm>
