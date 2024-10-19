@@ -1,77 +1,49 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
+import api from "../../services/api"; // Import to trigger ride requests
+import waveImage from "../../assets/sea.png"; // Replace with your wave image path
+import dolphinIcon from "../../assets/dolphin.png"; // Dolphin image
 
-// Keyframes for cloud movement (maintaining opacity until near the end)
-const moveCloud = keyframes`
-  0% { transform: translateX(-100%); opacity: 0.8; } /* Start with slightly lower opacity */
-  85% { opacity: 0.8; } /* Maintain slight transparency until near the end */
-  100% { transform: translateX(100vw); opacity: 0; } /* Fade out as it exits */
+// Wave animation: slide right-to-left to create a scrolling effect
+const scrollWave = keyframes`
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
 `;
 
-// Cloud styled component
-const Cloud = styled.div`
-  width: 200px;
-  height: 60px;
-  background: #fff;
-  border-radius: 50px;
+// Dolphin animation: jumping effect
+const moveDolphin = keyframes`
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); } /* Make it jump */
+`;
+
+// Styled components for waves
+const WaveContainer = styled.div`
   position: absolute;
-  left: -200px;
-  animation: ${moveCloud} 30s linear infinite;
-  opacity: 0.6; /* Set initial opacity */
-  &:before,
-  &:after {
-    content: "";
-    position: absolute;
-    background: #fff;
-    width: 100px;
-    height: 80px;
-    position: absolute;
-    top: -15px;
-    left: 10px;
-    border-radius: 100px;
-    transform: rotate(30deg);
-  }
-  &:after {
-    width: 120px;
-    height: 120px;
-    top: -55px;
-    left: auto;
-    right: 15px;
-  }
-`;
-
-// Function to generate random cloud positions with fewer clouds
-const generateClouds = (count) => {
-  const clouds = [];
-  for (let i = 0; i < count; i++) {
-    const randomTop = Math.floor(Math.random() * 70) + 10; // Random `top` between 10% and 80%
-    const randomDelay = Math.random() * -15; // Random delay to stagger clouds
-    clouds.push(<Cloud key={`cloud-${i}`} style={{ top: `${randomTop}%`, animationDelay: `${randomDelay}s` }} />);
-  }
-  return clouds;
-};
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background: linear-gradient(to bottom, #87ceeb, #e0f6ff);
+  bottom: 0;
+  width: 200%;
+  height: 150px;
   overflow: hidden;
-  position: relative;
 `;
 
-const LoadingMessage = styled.h2`
-  font-size: 24px;
-  color: #333;
-  text-align: center;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+const Wave = styled.img`
+  height: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  animation: ${scrollWave} 15s linear infinite;
 `;
 
+// Dolphin styled component
+const Dolphin = styled.img`
+  width: 60px;
+  position: absolute;
+  bottom: 70px; /* Position above the wave */
+  animation: ${moveDolphin} 2s ease-in-out infinite;
+  opacity: 0.9;
+  transition: opacity 0.5s;
+`;
+
+// Original dot animation for loading
 const DotContainer = styled.div`
   display: flex;
   align-items: center;
@@ -108,16 +80,74 @@ const Dot = styled.div`
   }
 `;
 
-const LoadingScreen = () => (
-  <Container>
-    <LoadingMessage>Searching...</LoadingMessage>
-    <DotContainer>
-      <Dot />
-      <Dot />
-      <Dot />
-    </DotContainer>
-    {generateClouds(5)} {/* Reduced the number of clouds */}
-  </Container>
-);
+// Container for the overall layout
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(to bottom, #87cefa, #e0f6ff);
+  overflow: hidden;
+  position: relative;
+`;
+
+// Original loading message
+const LoadingMessage = styled.h2`
+  font-size: 24px;
+  color: #333;
+  text-align: center;
+  margin-bottom: 10px;
+`;
+
+// Managing dolphins
+const LoadingScreen = () => {
+  const [dolphins, setDolphins] = useState([]);
+
+  // Add new dolphins when ride request received
+  const addDolphin = () => {
+    if (dolphins.length >= 8) {
+      dolphins.shift(); // Remove the oldest one if over the limit
+    }
+    const newDolphin = {
+      id: Date.now(),
+      left: `${Math.random() * 80 + 10}%`, // Random position
+    };
+    setDolphins([...dolphins, newDolphin]);
+  };
+
+  // Listen for new ride requests
+  useEffect(() => {
+    const fetchRideRequests = async () => {
+      try {
+        await api.createRideRequest();
+        addDolphin(); // Add dolphin when new request is detected
+      } catch (error) {
+        console.error("Failed to fetch ride request", error);
+      }
+    };
+
+    const interval = setInterval(fetchRideRequests, 5000); // Polling every 5 seconds
+    return () => clearInterval(interval);
+  }, [dolphins]);
+
+  return (
+    <Container>
+      <LoadingMessage>Searching...</LoadingMessage>
+      <DotContainer>
+        <Dot />
+        <Dot />
+        <Dot />
+      </DotContainer>
+      <WaveContainer>
+        <Wave src={waveImage} style={{ left: "0%" }} />
+        <Wave src={waveImage} style={{ left: "100%" }} />
+      </WaveContainer>
+      {dolphins.map((dolphin) => (
+        <Dolphin key={dolphin.id} src={dolphinIcon} style={{ left: dolphin.left }} />
+      ))}
+    </Container>
+  );
+};
 
 export default LoadingScreen;

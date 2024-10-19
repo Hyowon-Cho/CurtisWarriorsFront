@@ -3,13 +3,13 @@ import styled, { keyframes } from "styled-components";
 import { createUser } from "../../services/api";
 import { FaUser, FaEnvelope, FaCar } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import carpoolImage from '../../assets/carpool.png'; // <-- Import the image
-import ridewaveImage from '../../assets/ridewave.png'; // Assuming the image is stored here
+import carSideView from "../../assets/carSideView.png"; // Ensure you have this image in your assets folder
+import ridewaveImage from "../../assets/ridewave.png"; // Assuming the image is stored here
 
 const ImageContainer = styled.div`
-  width: 300px;
+  width: 200px; // You can adjust this to control the overall image size
   justify-content: center;
-  margin-bottom: 1rem;
+  margin: 0rem 0; // Adjust this to increase/decrease the padding above and below the image
   img {
     width: 100%;
     height: auto;
@@ -29,24 +29,23 @@ const FormContainer = styled.div`
 
 const Form = styled.form`
   background: rgba(255, 255, 255, 0.85);
-  padding: 3rem;
+  padding: 2rem; // Reduce or increase this to adjust the padding inside the form
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   width: 100%;
-  max-width: 450px;
+  max-width: 400px; // Adjust this to change the form size
   text-align: center;
   backdrop-filter: blur(10px);
 `;
 
 const Title = styled.h2`
   color: #6c63ff;
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin-bottom: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
 `;
-
 
 const InputGroup = styled.div`
   position: relative;
@@ -149,14 +148,13 @@ const Registration = ({ onRegister }) => {
   const [loading, setLoading] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!acceptedTerms) {
       setError("You must accept the terms and conditions.");
       return;
     }
-    
+
     if (name.length < 3 || !email.includes("@")) {
       setError("Please provide a valid name and email.");
       return;
@@ -165,7 +163,7 @@ const Registration = ({ onRegister }) => {
     setLoading(true);
     setError("");
     setSuccess("");
-    
+
     try {
       const response = await createUser({ name, email });
       if (response.data && response.data.user_id) {
@@ -184,44 +182,30 @@ const Registration = ({ onRegister }) => {
     }
   };
 
-  
   return (
     <FormContainer>
       <Form onSubmit={handleSubmit}>
         <Title>
-        <ImageContainer>
+          <ImageContainer>
             <img src={ridewaveImage} alt="Carpool Service" />
           </ImageContainer>
-          
-          Join Our RideWave
+          Join Our Wave of Ride
         </Title>
 
         <InputGroup>
-          <InputIcon><FaUser /></InputIcon>
-          <Input
-            type="text"
-            placeholder="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
+          <InputIcon>
+            <FaUser />
+          </InputIcon>
+          <Input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
         </InputGroup>
         <InputGroup>
-          <InputIcon><FaEnvelope /></InputIcon>
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+          <InputIcon>
+            <FaEnvelope />
+          </InputIcon>
+          <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         </InputGroup>
         <CheckboxGroup>
-          <input
-            type="checkbox"
-            checked={acceptedTerms}
-            onChange={() => setAcceptedTerms(!acceptedTerms)}
-          />
+          <input type="checkbox" checked={acceptedTerms} onChange={() => setAcceptedTerms(!acceptedTerms)} />
           <label>I accept the terms and conditions</label>
         </CheckboxGroup>
 
@@ -230,7 +214,7 @@ const Registration = ({ onRegister }) => {
 
         <Button type="submit" disabled={loading}>
           {loading && <LoadingSpinner />}
-          <FaCar style={{ marginRight: '10px' }} />
+          <img src={carSideView} alt="Car" style={{ width: "30px", marginRight: "10px" }} />
           Register
         </Button>
       </Form>
