@@ -1,27 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Home from "./components/screens/Home";
 import LoadingScreen from "./components/screens/LoadingScreen";
 import Registration from "./components/screens/registration";
+import { saveUserToSession, getUserFromSession } from "./utils/sessionUtils";
 
 const App = () => {
   const [showLoading, setShowLoading] = useState(false);
-  const [userId, setUserId] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const savedUser = getUserFromSession();
+    if (savedUser) {
+      setUser(savedUser);
+    }
+  }, []);
 
   const toggleLoadingScreen = () => {
     setShowLoading(!showLoading);
   };
 
-  const handleRegistration = (newUserId) => {
-    setUserId(newUserId);
+  const handleRegistration = (userId, name, email) => {
+    const newUser = { userId, name, email };
+    setUser(newUser);
+    saveUserToSession(newUser);
   };
 
-  if (!userId) {
+  if (!user) {
     return <Registration onRegister={handleRegistration} />;
   }
 
   return (
     <div>
-      {!showLoading && <Home onRequestRide={toggleLoadingScreen} userId={userId} />}
+      {!showLoading && <Home onRequestRide={toggleLoadingScreen} user={user} />}
       {showLoading && <LoadingScreen />}
     </div>
   );

@@ -114,14 +114,24 @@ const Home = ({ onRequestRide, user }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (parseInt(maxWaitTime) >= 121 || parseInt(maxWaitTime) <= 9) {
+    if (parseInt(maxWaitTime) > 120 || parseInt(maxWaitTime) < 10) {
       setError("Maximum wait time should be between 10 and 120 minutes.");
       return;
     }
     setError("");
 
+    if (!user || !user.userId) {
+      setError("User information is missing. Please try logging in again.");
+      return;
+    }
+
+    if (!pickupLocation || !dropoffLocation) {
+      setError("Please select both pickup and drop-off locations.");
+      return;
+    }
+
     try {
-      const response = await createRideRequest({
+      const rideRequestData = {
         user_id: user.userId,
         pickup_location: {
           latitude: pickupLocation.lat,
@@ -131,17 +141,37 @@ const Home = ({ onRequestRide, user }) => {
           latitude: dropoffLocation.lat,
           longitude: dropoffLocation.lng,
         },
-        max_wait_time: parseInt(maxWaitTime) * 60, // Convert to seconds
-      });
+        max_wait_time: parseInt(maxWaitTime) * 60, // Convert minutes to seconds
+      };
 
-      if (response) {
-        onRequestRide();
+      console.log("Sending ride request data:", rideRequestData); // 요청 데이터 로깅
+
+      const response = await createRideRequest(rideRequestData);
+      console.log("Ride request response:", response); // 응답 로깅
+
+      if (response.data) {
+        onRequestRide(response.data); // Pass the ride request data to the parent component
       } else {
-        setError("Failed to create ride request.");
+        setError("Failed to create ride request. No data in response.");
       }
     } catch (error) {
       console.error("Error submitting ride request:", error);
-      setError("An error occurred. Please try again.");
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+        console.error("Error response headers:", error.response.headers);
+        setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("Error request:", error.request);
+        setError("No response received from server. Please check your network connection.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Error message:", error.message);
+        setError(`Error: ${error.message}`);
+      }
     }
   };
 
@@ -174,7 +204,7 @@ const Home = ({ onRequestRide, user }) => {
   const handleMaxWaitTimeChange = (e) => {
     const value = e.target.value;
     setMaxWaitTime(value);
-    if (parseInt(value) >= 121 || parseInt(value) <= 9) {
+    if (parseInt(value) > 120 || parseInt(value) < 10) {
       setError("Waiting Time should be between 10 and 120 minutes.");
     } else {
       setError("");
