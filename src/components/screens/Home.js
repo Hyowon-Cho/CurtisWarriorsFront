@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import { createRideRequest } from "../../services/api";
 import Map from "../common/Map";
-import LoadingScreen from "./LoadingScreen";
 import { FaMapMarkerAlt, FaClock } from "react-icons/fa";
 
 const HomeContainer = styled.div`
@@ -60,7 +59,7 @@ const InputWrapper = styled.div`
 `;
 
 const AutocompleteWrapper = styled(Autocomplete)`
-  width: 100%; /* Ensure the Autocomplete component takes the full width */
+  width: 100%;
 `;
 
 const StyledInput = styled.input`
@@ -72,7 +71,7 @@ const StyledInput = styled.input`
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-  max-width: 100%; /* Ensure it expands or shrinks as needed */
+  max-width: 100%;
   &:focus {
     outline: none;
   }
@@ -97,12 +96,11 @@ const ErrorMessage = styled.div`
   font-size: 14px;
 `;
 
-const Home = () => {
+const Home = ({ onRequestRide, user }) => {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [pickupLocation, setPickupLocation] = useState(null);
   const [dropoffLocation, setDropoffLocation] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [maxWaitTime, setMaxWaitTime] = useState("");
   const [error, setError] = useState("");
 
@@ -117,21 +115,27 @@ const Home = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (parseInt(maxWaitTime) >= 121 || parseInt(maxWaitTime) <= 9) {
-      setError("Maximum wait time cannot exceed 120 minutes.");
+      setError("Maximum wait time should be between 10 and 120 minutes.");
       return;
     }
     setError("");
 
     try {
-      // Submit ride request using the backend API
       const response = await createRideRequest({
-        pickup: pickupLocation,
-        dropoff: dropoffLocation,
-        maxWaitTime: parseInt(maxWaitTime) * 60,
+        user_id: user.userId,
+        pickup_location: {
+          latitude: pickupLocation.lat,
+          longitude: pickupLocation.lng,
+        },
+        dropoff_location: {
+          latitude: dropoffLocation.lat,
+          longitude: dropoffLocation.lng,
+        },
+        max_wait_time: parseInt(maxWaitTime) * 60, // Convert to seconds
       });
 
-      if (response.data.status === "success") {
-        setIsLoading(true);
+      if (response) {
+        onRequestRide();
       } else {
         setError("Failed to create ride request.");
       }
@@ -142,7 +146,6 @@ const Home = () => {
   };
 
   const handlePlaceSelect = (place, type) => {
-    // Ensure place and place.geometry are defined before proceeding
     if (place && place.geometry) {
       const location = {
         lat: place.geometry.location.lat(),
@@ -172,29 +175,14 @@ const Home = () => {
     const value = e.target.value;
     setMaxWaitTime(value);
     if (parseInt(value) >= 121 || parseInt(value) <= 9) {
-      setError("Waiting Time should be in 10 ~ 120 minutes.");
+      setError("Waiting Time should be between 10 and 120 minutes.");
     } else {
       setError("");
     }
   };
 
-  const handleCancel = () => {
-    setIsLoading(false);
-  };
-
   if (loadError) return "Error loading maps";
   if (!isLoaded) return "Loading Maps";
-
-  if (isLoading) {
-    return (
-      <LoadingScreen
-        pickup={pickup}
-        dropoff={dropoff}
-        maxWaitTime={parseInt(maxWaitTime) * 60}
-        onCancel={handleCancel}
-      />
-    );
-  }
 
   return (
     <HomeContainer>
