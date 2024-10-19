@@ -4,6 +4,7 @@ import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import { createRideRequest } from "../../services/api";
 import Map from "../common/Map";
 import { FaMapMarkerAlt, FaClock, FaCreditCard } from "react-icons/fa";
+import rideWaveImage from "../../assets/ridewave.png"; // RideWave 이미지 경로 추가
 
 const HomeContainer = styled.div`
   display: flex;
@@ -29,6 +30,25 @@ const RideFormContainer = styled.div`
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
 `;
+
+// RideWave Title Container
+const TitleContainer = styled.div`
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000; // Make sure it's above the map
+`;
+
+const TitleText = styled.h1`
+  font-size: 24px;
+  color: #333; // Text color
+  margin: 0; // Remove default margin
+`;
+
+// Other styled components remain the same...
 
 const RideForm = styled.form`
   display: flex;
@@ -111,7 +131,7 @@ const Home = ({ onRequestRide, user }) => {
   const [pickupLocation, setPickupLocation] = useState(null);
   const [dropoffLocation, setDropoffLocation] = useState(null);
   const [maxWaitTime, setMaxWaitTime] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("credit_card"); // 결제 방법 상태 추가
+  const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [error, setError] = useState("");
 
   const pickupAutocompleteRef = useRef(null);
@@ -152,7 +172,7 @@ const Home = ({ onRequestRide, user }) => {
           longitude: dropoffLocation.lng,
         },
         max_wait_time: parseInt(maxWaitTime) * 60, // Convert minutes to seconds
-        payment_method: paymentMethod, // 결제 방법 추가
+        payment_method: paymentMethod,
       };
 
       console.log("Sending ride request data:", rideRequestData); // 요청 데이터 로깅
@@ -215,6 +235,10 @@ const Home = ({ onRequestRide, user }) => {
 
   return (
     <HomeContainer>
+      <TitleContainer>
+        <img src={rideWaveImage} alt="RideWave" style={{ width: "40px" }} />
+        <TitleText>RideWave</TitleText>
+      </TitleContainer>
       <MapContainer>
         <Map pickupLocation={pickupLocation} dropoffLocation={dropoffLocation} />
       </MapContainer>
