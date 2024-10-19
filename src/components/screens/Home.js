@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import { createRideRequest } from "../../services/api";
 import Map from "../common/Map";
-import { FaMapMarkerAlt, FaClock } from "react-icons/fa";
+import { FaMapMarkerAlt, FaClock, FaCreditCard } from "react-icons/fa";
 
 const HomeContainer = styled.div`
   display: flex;
@@ -58,10 +58,6 @@ const InputWrapper = styled.div`
   max-width: 100%;
 `;
 
-const AutocompleteWrapper = styled(Autocomplete)`
-  width: 100%;
-`;
-
 const StyledInput = styled.input`
   flex: 1;
   border: none;
@@ -72,6 +68,19 @@ const StyledInput = styled.input`
   text-overflow: ellipsis;
   width: 100%;
   max-width: 100%;
+  &:focus {
+    outline: none;
+  }
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  background-color: #f0f0f0;
+  color: #333;
   &:focus {
     outline: none;
   }
@@ -102,6 +111,7 @@ const Home = ({ onRequestRide, user }) => {
   const [pickupLocation, setPickupLocation] = useState(null);
   const [dropoffLocation, setDropoffLocation] = useState(null);
   const [maxWaitTime, setMaxWaitTime] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("credit_card"); // 결제 방법 상태 추가
   const [error, setError] = useState("");
 
   const pickupAutocompleteRef = useRef(null);
@@ -142,19 +152,33 @@ const Home = ({ onRequestRide, user }) => {
           longitude: dropoffLocation.lng,
         },
         max_wait_time: parseInt(maxWaitTime) * 60, // Convert minutes to seconds
+        payment_method: paymentMethod, // 결제 방법 추가
       };
 
+      console.log("Sending ride request data:", rideRequestData); // 요청 데이터 로깅
+
       const response = await createRideRequest(rideRequestData);
-      console.log("Ride request response:", response);
+      console.log("Ride request response:", response); // 응답 로깅
 
       if (response.data) {
-        onRequestRide(response.data);
+        onRequestRide(response.data); // Pass the ride request data to the parent component
       } else {
         setError("Failed to create ride request. No data in response.");
       }
     } catch (error) {
       console.error("Error submitting ride request:", error);
-      setError(`Error: ${error.response?.data?.detail || error.message}`);
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+        console.error("Error response headers:", error.response.headers);
+        setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        console.error("Error request:", error.request);
+        setError("No response received from server. Please check your network connection.");
+      } else {
+        console.error("Error message:", error.message);
+        setError(`Error: ${error.message}`);
+      }
     }
   };
 
@@ -174,14 +198,6 @@ const Home = ({ onRequestRide, user }) => {
     } else {
       console.error("Invalid place data:", place);
     }
-  };
-
-  const onPickupLoad = (autocomplete) => {
-    pickupAutocompleteRef.current = autocomplete;
-  };
-
-  const onDropoffLoad = (autocomplete) => {
-    dropoffAutocompleteRef.current = autocomplete;
   };
 
   const handleMaxWaitTimeChange = (e) => {
@@ -208,22 +224,22 @@ const Home = ({ onRequestRide, user }) => {
             <InputIcon color="#4CAF50">
               <FaMapMarkerAlt />
             </InputIcon>
-            <AutocompleteWrapper
-              onLoad={onPickupLoad}
+            <Autocomplete
+              onLoad={(autocomplete) => (pickupAutocompleteRef.current = autocomplete)}
               onPlaceChanged={() => {
                 const place = pickupAutocompleteRef.current.getPlace();
                 handlePlaceSelect(place, "pickup");
               }}
             >
               <StyledInput placeholder="Pick-Up Location" value={pickup} onChange={(e) => setPickup(e.target.value)} />
-            </AutocompleteWrapper>
+            </Autocomplete>
           </InputWrapper>
           <InputWrapper>
             <InputIcon color="#F44336">
               <FaMapMarkerAlt />
             </InputIcon>
-            <AutocompleteWrapper
-              onLoad={onDropoffLoad}
+            <Autocomplete
+              onLoad={(autocomplete) => (dropoffAutocompleteRef.current = autocomplete)}
               onPlaceChanged={() => {
                 const place = dropoffAutocompleteRef.current.getPlace();
                 handlePlaceSelect(place, "dropoff");
@@ -234,7 +250,7 @@ const Home = ({ onRequestRide, user }) => {
                 value={dropoff}
                 onChange={(e) => setDropoff(e.target.value)}
               />
-            </AutocompleteWrapper>
+            </Autocomplete>
           </InputWrapper>
           <InputWrapper>
             <InputIcon color="#FFC107">
@@ -249,9 +265,19 @@ const Home = ({ onRequestRide, user }) => {
               max="120"
             />
           </InputWrapper>
+          <InputWrapper>
+            <InputIcon color="#000000">
+              <FaCreditCard />
+            </InputIcon>
+            <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+              <option value="credit_card">Credit Card</option>
+              <option value="cash">Cash</option>
+              <option value="paypal">PayPal</option>
+            </Select>
+          </InputWrapper>
           {error && <ErrorMessage>{error}</ErrorMessage>}
           <RequestButton type="submit" disabled={!pickup || !dropoff || !maxWaitTime || error}>
-            Join the wave of ride
+            Request Ride
           </RequestButton>
         </RideForm>
       </RideFormContainer>
