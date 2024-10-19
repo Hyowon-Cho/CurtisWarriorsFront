@@ -1,151 +1,128 @@
 import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
-import api from "../../services/api"; // Import to trigger ride requests
-import waveImage from "../../assets/sea.png"; // Replace with your wave image path
-import dolphinIcon from "../../assets/dolphin.png"; // Dolphin image
+import api from "../../services/api";
 
-// Wave animation: slide right-to-left to create a scrolling effect
-const scrollWave = keyframes`
-  0% { transform: translateX(0); }
-  100% { transform: translateX(100%); }
+const waveAnimation = keyframes`
+  0% { transform: translateX(0) translateZ(0) scaleY(1); }
+  50% { transform: translateX(-25%) translateZ(0) scaleY(0.55); }
+  100% { transform: translateX(-50%) translateZ(0) scaleY(1); }
 `;
 
-// Dolphin animation: jumping effect
-const moveDolphin = keyframes`
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); } /* Make it jump */
+const rotateAnimation = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 `;
 
-// Styled components for waves
-const WaveContainer = styled.div`
-  position: absolute;
-  bottom: 0;
-  width: 200%;
-  height: 150px;
-  overflow: hidden;
-`;
-
-const Wave = styled.img`
-  height: 100%;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  animation: ${scrollWave} 15s linear infinite;
-`;
-
-// Dolphin styled component
-const Dolphin = styled.img`
-  width: 60px;
-  position: absolute;
-  bottom: 70px; /* Position above the wave */
-  animation: ${moveDolphin} 2s ease-in-out infinite;
-  opacity: 0.9;
-  transition: opacity 0.5s;
-`;
-
-// Original dot animation for loading
-const DotContainer = styled.div`
-  display: flex;
-  align-items: center;
-  margin-top: 20px;
-`;
-
-const Dot = styled.div`
-  width: 8px;
-  height: 8px;
-  background-color: #3498db;
-  border-radius: 50%;
-  margin: 0 3px;
-  animation: dotPulse 1s infinite ease-in-out;
-
-  &:nth-child(1) {
-    animation-delay: 0s;
-  }
-  &:nth-child(2) {
-    animation-delay: 0.2s;
-  }
-  &:nth-child(3) {
-    animation-delay: 0.4s;
-  }
-
-  @keyframes dotPulse {
-    0%,
-    80%,
-    100% {
-      opacity: 0;
-    }
-    40% {
-      opacity: 1;
-    }
-  }
-`;
-
-// Container for the overall layout
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100vh;
-  background: linear-gradient(to bottom, #87cefa, #e0f6ff);
+  background: linear-gradient(135deg, #6c63ff, #4834d4);
   overflow: hidden;
   position: relative;
 `;
 
-// Original loading message
+const Content = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+`;
+
 const LoadingMessage = styled.h2`
-  font-size: 24px;
-  color: #333;
+  font-size: 28px;
+  color: white;
   text-align: center;
+  margin-bottom: 20px;
+  font-weight: 600;
+`;
+
+const SubMessage = styled.div`
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 30px;
+  text-align: center;
+`;
+
+const RequestCount = styled.div`
+  font-size: 48px;
+  color: white;
+  font-weight: bold;
   margin-bottom: 10px;
 `;
 
-// Managing dolphins
-const LoadingScreen = () => {
-  const [dolphins, setDolphins] = useState([]);
+const RequestLabel = styled.div`
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 30px;
+`;
 
-  // Add new dolphins when ride request received
-  const addDolphin = () => {
-    if (dolphins.length >= 8) {
-      dolphins.shift(); // Remove the oldest one if over the limit
-    }
-    const newDolphin = {
-      id: Date.now(),
-      left: `${Math.random() * 80 + 10}%`, // Random position
-    };
-    setDolphins([...dolphins, newDolphin]);
-  };
+const ProgressIndicator = styled.div`
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: ${rotateAnimation} 1s linear infinite;
+`;
 
-  // Listen for new ride requests
+const Wave = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 88.7'%3E%3Cpath d='M800 56.9c-155.5 0-204.9-50-405.5-49.9-200 0-250 49.9-394.5 49.9v31.8h800v-.2-31.6z' fill='%23ffffff33'/%3E%3C/svg%3E");
+  background-position: 0 bottom;
+  background-repeat: repeat-x;
+  animation: ${waveAnimation} 10s linear infinite;
+`;
+
+const LoadingScreen = ({ onRouteConfirmed, requestId }) => {
+  const [requestCount, setRequestCount] = useState(0);
+  const [shouldDepart, setShouldDepart] = useState(false);
+  const [isRequestConfirmed, setIsRequestConfirmed] = useState(false);
+
   useEffect(() => {
-    const fetchRideRequests = async () => {
+    const fetchData = async () => {
       try {
-        await api.createRideRequest();
-        addDolphin(); // Add dolphin when new request is detected
+        const requestsResponse = await api.get("/ride-requests");
+        if (requestsResponse.data && Array.isArray(requestsResponse.data)) {
+          setRequestCount(requestsResponse.data.length);
+        }
+
+        const departResponse = await api.get(`/bus-routes/should-depart`);
+        if (departResponse.data) {
+          setShouldDepart(departResponse.data.should_depart);
+          setIsRequestConfirmed(departResponse.data.confirmed_request_ids.includes(requestId));
+          if (departResponse.data.should_depart && departResponse.data.confirmed_request_ids.includes(requestId)) {
+            onRouteConfirmed();
+          }
+        }
       } catch (error) {
-        console.error("Failed to fetch ride request", error);
+        console.error("Failed to fetch data", error);
       }
     };
 
-    const interval = setInterval(fetchRideRequests, 5000); // Polling every 5 seconds
+    fetchData();
+    const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
-  }, [dolphins]);
+  }, [onRouteConfirmed, requestId]);
 
   return (
     <Container>
-      <LoadingMessage>Searching...</LoadingMessage>
-      <DotContainer>
-        <Dot />
-        <Dot />
-        <Dot />
-      </DotContainer>
-      <WaveContainer>
-        <Wave src={waveImage} style={{ left: "0%" }} />
-        <Wave src={waveImage} style={{ left: "100%" }} />
-      </WaveContainer>
-      {dolphins.map((dolphin) => (
-        <Dolphin key={dolphin.id} src={dolphinIcon} style={{ left: dolphin.left }} />
-      ))}
+      <Content>
+        <LoadingMessage>Join the wave of ride</LoadingMessage>
+        <SubMessage>We are finding your best wave</SubMessage>
+        <RequestCount>{requestCount}</RequestCount>
+        <RequestLabel>Active Ride Requests</RequestLabel>
+        <ProgressIndicator />
+      </Content>
+      <Wave />
+      <Wave style={{ opacity: 0.5, animationDuration: "15s" }} />
     </Container>
   );
 };

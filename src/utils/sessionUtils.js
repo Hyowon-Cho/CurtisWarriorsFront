@@ -10,3 +10,16 @@ export const saveUserToSession = (user) => {
   export const removeUserFromSession = () => {
     sessionStorage.removeItem('user');
   };
+  
+  export const saveRideRequestToSession = (rideRequest) => {
+    if (rideRequest) {
+      sessionStorage.setItem('rideRequest', JSON.stringify(rideRequest));
+    } else {
+      sessionStorage.removeItem('rideRequest');
+    }
+  };
+  
+  export const getRideRequestFromSession = () => {
+    const rideRequestString = sessionStorage.getItem('rideRequest');
+    return rideRequestString ? JSON.parse(rideRequestString) : null;
+  };

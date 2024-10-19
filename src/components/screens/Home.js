@@ -144,34 +144,17 @@ const Home = ({ onRequestRide, user }) => {
         max_wait_time: parseInt(maxWaitTime) * 60, // Convert minutes to seconds
       };
 
-      console.log("Sending ride request data:", rideRequestData); // 요청 데이터 로깅
-
       const response = await createRideRequest(rideRequestData);
-      console.log("Ride request response:", response); // 응답 로깅
+      console.log("Ride request response:", response);
 
       if (response.data) {
-        onRequestRide(response.data); // Pass the ride request data to the parent component
+        onRequestRide(response.data);
       } else {
         setError("Failed to create ride request. No data in response.");
       }
     } catch (error) {
       console.error("Error submitting ride request:", error);
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
-        console.error("Error response headers:", error.response.headers);
-        setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("Error request:", error.request);
-        setError("No response received from server. Please check your network connection.");
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Error message:", error.message);
-        setError(`Error: ${error.message}`);
-      }
+      setError(`Error: ${error.response?.data?.detail || error.message}`);
     }
   };
 
@@ -268,7 +251,7 @@ const Home = ({ onRequestRide, user }) => {
           </InputWrapper>
           {error && <ErrorMessage>{error}</ErrorMessage>}
           <RequestButton type="submit" disabled={!pickup || !dropoff || !maxWaitTime || error}>
-            Request Ride
+            Join the wave of ride
           </RequestButton>
         </RideForm>
       </RideFormContainer>
