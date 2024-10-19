@@ -4,9 +4,10 @@ import { createUser } from "../../services/api";
 import { FaUser, FaEnvelope, FaCar } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import carpoolImage from '../../assets/carpool.png'; // <-- Import the image
+import ridewaveImage from '../../assets/ridewave.png'; // Assuming the image is stored here
 
 const ImageContainer = styled.div`
-  width: 100px;
+  width: 300px;
   justify-content: center;
   margin-bottom: 1rem;
   img {
@@ -189,7 +190,7 @@ const Registration = ({ onRegister }) => {
       <Form onSubmit={handleSubmit}>
         <Title>
         <ImageContainer>
-            <img src={carpoolImage} alt="Carpool Service" />
+            <img src={ridewaveImage} alt="Carpool Service" />
           </ImageContainer>
           
           Join Our RideWave
