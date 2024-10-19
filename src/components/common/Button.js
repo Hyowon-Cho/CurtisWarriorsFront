@@ -10,22 +10,15 @@ const StyledButton = styled.button`
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 
   &:hover {
-    background-color: #5a52d9;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: scale(1.05); /* Slightly enlarges the button on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Adds a shadow effect */
   }
 
   &:active {
-    transform: translateY(0);
-    box-shadow: none;
-  }
-
-  &:disabled {
-    background-color: #b3b3b3;
-    cursor: not-allowed;
+    transform: scale(0.95); /* Shrinks the button on click */
   }
 `;
 

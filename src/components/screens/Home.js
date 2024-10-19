@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import styled from "styled-components";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
+import { createRideRequest } from "../../services/api";
 import Map from "../common/Map";
 import LoadingScreen from "./LoadingScreen";
 import { FaMapMarkerAlt, FaClock } from "react-icons/fa";
@@ -35,6 +36,7 @@ const RideForm = styled.form`
   flex-direction: column;
   gap: 16px;
 `;
+
 const InputIcon = styled.div`
   width: 30px;
   height: 30px;
@@ -46,34 +48,38 @@ const InputIcon = styled.div`
   flex-shrink: 0;
 `;
 
-
-const InputWithIcon = styled.div`
+const InputWrapper = styled.div`
   display: flex;
   align-items: center;
   background-color: #f0f0f0;
   border-radius: 8px;
   padding: 8px;
   width: 100%;
-  flex-grow: 1; /* 컨테이너가 화면 크기에 맞게 늘어나도록 설정 */
-  max-width: 100%; /* 최대 너비를 100%로 설정 */
+  flex-grow: 1;
+  max-width: 100%;
 `;
+
+const AutocompleteWrapper = styled(Autocomplete)`
+  width: 100%; /* Ensure the Autocomplete component takes the full width */
+`;
+
 const StyledInput = styled.input`
   flex: 1;
   border: none;
   background: transparent;
   font-size: 16px;
-  width: 100%;
   min-width: 0;
-  white-space: nowrap; /* 줄바꿈 방지 */
-  overflow: hidden; /* 넘친 텍스트를 숨김 */
-  text-overflow: ellipsis; /* 넘친 텍스트를 ...으로 표시 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  max-width: 100%; /* Ensure it expands or shrinks as needed */
   &:focus {
     outline: none;
   }
 `;
 
 const RequestButton = styled.button`
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   padding: 12px;
@@ -108,19 +114,36 @@ const Home = () => {
     libraries: ["places"],
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (parseInt(maxWaitTime) >= 121 || parseInt(maxWaitTime) <= 9) {
       setError("Maximum wait time cannot exceed 120 minutes.");
       return;
     }
     setError("");
-    setIsLoading(true);
+
+    try {
+      // Submit ride request using the backend API
+      const response = await createRideRequest({
+        pickup: pickupLocation,
+        dropoff: dropoffLocation,
+        maxWaitTime: parseInt(maxWaitTime) * 60,
+      });
+
+      if (response.data.status === "success") {
+        setIsLoading(true);
+      } else {
+        setError("Failed to create ride request.");
+      }
+    } catch (error) {
+      console.error("Error submitting ride request:", error);
+      setError("An error occurred. Please try again.");
+    }
   };
-  
 
   const handlePlaceSelect = (place, type) => {
-    if (place.geometry) {
+    // Ensure place and place.geometry are defined before proceeding
+    if (place && place.geometry) {
       const location = {
         lat: place.geometry.location.lat(),
         lng: place.geometry.location.lng(),
@@ -132,6 +155,8 @@ const Home = () => {
         setDropoff(place.formatted_address);
         setDropoffLocation(location);
       }
+    } else {
+      console.error("Invalid place data:", place);
     }
   };
 
@@ -152,7 +177,10 @@ const Home = () => {
       setError("");
     }
   };
-  
+
+  const handleCancel = () => {
+    setIsLoading(false);
+  };
 
   if (loadError) return "Error loading maps";
   if (!isLoaded) return "Loading Maps";
@@ -162,8 +190,8 @@ const Home = () => {
       <LoadingScreen
         pickup={pickup}
         dropoff={dropoff}
-        maxWaitTime={parseInt(maxWaitTime) * 60} // 분을 초로 변환
-        onCancel={() => setIsLoading(false)}
+        maxWaitTime={parseInt(maxWaitTime) * 60}
+        onCancel={handleCancel}
       />
     );
   }
@@ -175,29 +203,25 @@ const Home = () => {
       </MapContainer>
       <RideFormContainer>
         <RideForm onSubmit={handleSubmit}>
-          <InputWithIcon>
+          <InputWrapper>
             <InputIcon color="#4CAF50">
               <FaMapMarkerAlt />
             </InputIcon>
-            <Autocomplete
+            <AutocompleteWrapper
               onLoad={onPickupLoad}
               onPlaceChanged={() => {
                 const place = pickupAutocompleteRef.current.getPlace();
                 handlePlaceSelect(place, "pickup");
               }}
             >
-              <StyledInput
-                placeholder="Pick-Up Location"
-                value={pickup}
-                onChange={(e) => setPickup(e.target.value)}
-              />
-            </Autocomplete>
-          </InputWithIcon>
-          <InputWithIcon>
+              <StyledInput placeholder="Pick-Up Location" value={pickup} onChange={(e) => setPickup(e.target.value)} />
+            </AutocompleteWrapper>
+          </InputWrapper>
+          <InputWrapper>
             <InputIcon color="#F44336">
               <FaMapMarkerAlt />
             </InputIcon>
-            <Autocomplete
+            <AutocompleteWrapper
               onLoad={onDropoffLoad}
               onPlaceChanged={() => {
                 const place = dropoffAutocompleteRef.current.getPlace();
@@ -209,9 +233,9 @@ const Home = () => {
                 value={dropoff}
                 onChange={(e) => setDropoff(e.target.value)}
               />
-            </Autocomplete>
-          </InputWithIcon>
-          <InputWithIcon>
+            </AutocompleteWrapper>
+          </InputWrapper>
+          <InputWrapper>
             <InputIcon color="#FFC107">
               <FaClock />
             </InputIcon>
@@ -223,12 +247,9 @@ const Home = () => {
               min="10"
               max="120"
             />
-          </InputWithIcon>
+          </InputWrapper>
           {error && <ErrorMessage>{error}</ErrorMessage>}
-          <RequestButton
-            type="submit"
-            disabled={!pickup || !dropoff || !maxWaitTime || error}
-          >
+          <RequestButton type="submit" disabled={!pickup || !dropoff || !maxWaitTime || error}>
             Request Ride
           </RequestButton>
         </RideForm>

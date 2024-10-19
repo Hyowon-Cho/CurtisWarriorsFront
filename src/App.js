@@ -1,37 +1,20 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import styled from "styled-components";
+import React, { useState } from "react";
 import Home from "./components/screens/Home";
-import Profile from "./components/screens/Profile";
-import Header from "./components/layout/Header";
-import Footer from "./components/layout/Footer";
+import LoadingScreen from "./components/screens/LoadingScreen";
 
-const AppContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-`;
+const App = () => {
+  const [showLoading, setShowLoading] = useState(false);
 
-const MainContent = styled.main`
-  flex: 1;
-`;
+  const toggleLoadingScreen = () => {
+    setShowLoading(!showLoading);
+  };
 
-function App() {
   return (
-    <Router>
-      <AppContainer>
-        <Header />
-        <MainContent>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            {/* <Route path="/ride-request" element={<RideRequest />} /> 삭제 */}
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
-        </MainContent>
-        <Footer />
-      </AppContainer>
-    </Router>
+    <div>
+      {!showLoading && <Home onRequestRide={toggleLoadingScreen} />}
+      {showLoading && <LoadingScreen />}
+    </div>
   );
-}
+};
 
 export default App;
