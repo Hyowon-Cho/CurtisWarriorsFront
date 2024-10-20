@@ -1,11 +1,12 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
 import { createRideRequest } from "../../services/api";
 import Map from "../common/Map";
-import { FaMapMarkerAlt, FaClock, FaCreditCard, FaChevronUp, FaBars, FaTimes } from "react-icons/fa";
+import { FaMapMarkerAlt, FaClock, FaCreditCard, FaChevronUp } from "react-icons/fa";
 import rideWaveImage from "../../assets/ridewave.png";
 
+// Keyframe Animations
 const slideUp = keyframes`
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
@@ -16,6 +17,7 @@ const fadeIn = keyframes`
   to { opacity: 1; }
 `;
 
+// Styled Components
 const HomeContainer = styled.div`
   height: 100vh;
   width: 100vw;
@@ -56,7 +58,7 @@ const Logo = styled.img`
   width: 50px;
   height: 50px;
   filter: brightness(0) invert(1);
-  object-fit: contain; /* Ensures the logo keeps its aspect ratio */
+  object-fit: contain;
 `;
 
 const TitleText = styled.h1`
@@ -64,25 +66,6 @@ const TitleText = styled.h1`
   color: white;
   margin: 0;
   font-weight: 600;
-`;
-
-const MenuButton = styled.button`
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  cursor: pointer;
-  backdrop-filter: blur(4px);
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
 `;
 
 const RideFormContainer = styled.div`
@@ -96,7 +79,6 @@ const RideFormContainer = styled.div`
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
   z-index: 3;
   animation: ${slideUp} 0.3s ease-out;
-  transition: transform 0.3s ease;
   transform: translateY(${(props) => (props.minimized ? "calc(100% - 60px)" : "0")});
 
   @media (min-width: 1024px) {
@@ -188,15 +170,15 @@ const InputIcon = styled.div`
 `;
 
 const StyledInput = styled.input`
-  flex: 1; /* Allows it to take up available space */
+  flex: 1;
   border: none;
   background: transparent;
   font-size: 15px;
   color: #333;
-  min-width: 0; /* Prevents it from shrinking */
-  overflow: hidden; /* Hides overflow if needed */
-  text-overflow: ellipsis; /* Adds ellipsis if text overflows */
-  white-space: nowrap; /* Prevents text from wrapping */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   &:focus {
     outline: none;
@@ -223,9 +205,6 @@ const Select = styled.select`
   color: #333;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg width='14' height='8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
   padding-right: 32px;
 
   &:focus {
@@ -272,6 +251,7 @@ const ErrorMessage = styled.div`
   text-align: center;
 `;
 
+// Component Logic
 const Home = ({ onRequestRide, user }) => {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
@@ -289,6 +269,13 @@ const Home = ({ onRequestRide, user }) => {
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
     libraries: ["places"],
   });
+
+  useEffect(() => {
+    if (loadError) {
+      console.error("Error loading Google Maps script:", loadError);
+      setError("Error loading maps. Please refresh the page.");
+    }
+  }, [loadError]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -319,17 +306,17 @@ const Home = ({ onRequestRide, user }) => {
           latitude: dropoffLocation.lat,
           longitude: dropoffLocation.lng,
         },
-        max_wait_time: parseInt(maxWaitTime) * 60, // Convert minutes to seconds
+        max_wait_time: parseInt(maxWaitTime) * 60,
         payment_method: paymentMethod,
       };
 
-      console.log("Sending ride request data:", rideRequestData); // 요청 데이터 로깅
+      console.log("Sending ride request data:", rideRequestData);
 
       const response = await createRideRequest(rideRequestData);
-      console.log("Ride request response:", response); // 응답 로깅
+      console.log("Ride request response:", response);
 
       if (response.data) {
-        onRequestRide(response.data); // Pass the ride request data to the parent component
+        onRequestRide(response.data);
       } else {
         setError("Failed to create ride request. No data in response.");
       }
@@ -337,8 +324,6 @@ const Home = ({ onRequestRide, user }) => {
       console.error("Error submitting ride request:", error);
       if (error.response) {
         console.error("Error response data:", error.response.data);
-        console.error("Error response status:", error.response.status);
-        console.error("Error response headers:", error.response.headers);
         setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`);
       } else if (error.request) {
         console.error("Error request:", error.request);
@@ -365,6 +350,7 @@ const Home = ({ onRequestRide, user }) => {
       }
     } else {
       console.error("Invalid place data:", place);
+      setError("Failed to retrieve location details. Please try again.");
     }
   };
 
@@ -378,7 +364,12 @@ const Home = ({ onRequestRide, user }) => {
     }
   };
 
-  if (loadError) return "Error loading maps";
+  const handleAutocompleteLoad = (autocompleteRef, type) => {
+    if (autocompleteRef.current) {
+      console.warn(`Autocomplete for ${type} was already initialized.`);
+    }
+  };
+
   if (!isLoaded) return "Loading Maps";
 
   return (
@@ -409,7 +400,10 @@ const Home = ({ onRequestRide, user }) => {
                 <FaMapMarkerAlt size={14} />
               </InputIcon>
               <Autocomplete
-                onLoad={(autocomplete) => (pickupAutocompleteRef.current = autocomplete)}
+                onLoad={(autocomplete) => {
+                  pickupAutocompleteRef.current = autocomplete;
+                  handleAutocompleteLoad(pickupAutocompleteRef, "pickup");
+                }}
                 onPlaceChanged={() => {
                   const place = pickupAutocompleteRef.current.getPlace();
                   handlePlaceSelect(place, "pickup");
@@ -428,7 +422,10 @@ const Home = ({ onRequestRide, user }) => {
                 <FaMapMarkerAlt size={14} />
               </InputIcon>
               <Autocomplete
-                onLoad={(autocomplete) => (dropoffAutocompleteRef.current = autocomplete)}
+                onLoad={(autocomplete) => {
+                  dropoffAutocompleteRef.current = autocomplete;
+                  handleAutocompleteLoad(dropoffAutocompleteRef, "dropoff");
+                }}
                 onPlaceChanged={() => {
                   const place = dropoffAutocompleteRef.current.getPlace();
                   handlePlaceSelect(place, "dropoff");

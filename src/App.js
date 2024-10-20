@@ -2,10 +2,17 @@ import React, { useState, useEffect } from "react";
 import Home from "./components/screens/Home";
 import LoadingScreen from "./components/screens/LoadingScreen";
 import Registration from "./components/screens/registration";
-import { saveUserToSession, getUserFromSession, saveRideRequestToSession, getRideRequestFromSession } from "./utils/sessionUtils";
+import ConfirmedRouteScreen from "./components/screens/ConfirmedRouteScreen";
+import {
+  saveUserToSession,
+  getUserFromSession,
+  saveRideRequestToSession,
+  getRideRequestFromSession,
+} from "./utils/sessionUtils";
 
 const App = () => {
   const [showLoading, setShowLoading] = useState(false);
+  const [showConfirmedRoute, setShowConfirmedRoute] = useState(false);
   const [user, setUser] = useState(null);
   const [rideRequest, setRideRequest] = useState(null);
 
@@ -35,8 +42,8 @@ const App = () => {
 
   const handleRouteConfirmed = () => {
     setShowLoading(false);
-    setRideRequest(null);
-    saveRideRequestToSession(null);
+    setShowConfirmedRoute(true);
+    // Don't clear the ride request here, as we might need it for ConfirmedRouteScreen
   };
 
   if (!user) {
@@ -45,8 +52,9 @@ const App = () => {
 
   return (
     <div>
-      {!showLoading && <Home onRequestRide={handleRideRequest} user={user} />}
-      {showLoading && <LoadingScreen onRouteConfirmed={handleRouteConfirmed} requestId={rideRequest?.id} />}
+      {!showLoading && !showConfirmedRoute && <Home onRequestRide={handleRideRequest} user={user} />}
+      {showLoading && <LoadingScreen onRouteConfirmed={handleRouteConfirmed} requestId={rideRequest?.request_id} />}
+      {showConfirmedRoute && <ConfirmedRouteScreen requestId={rideRequest?.request_id} />}
     </div>
   );
 };

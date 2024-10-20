@@ -97,9 +97,15 @@ const LoadingScreen = ({ onRouteConfirmed, requestId }) => {
         const departResponse = await api.get(`/bus-routes/should-depart`);
         if (departResponse.data) {
           setShouldDepart(departResponse.data.should_depart);
-          setIsRequestConfirmed(departResponse.data.confirmed_request_ids.includes(requestId));
-          if (departResponse.data.should_depart && departResponse.data.confirmed_request_ids.includes(requestId)) {
-            onRouteConfirmed();
+          const isConfirmed = departResponse.data.confirmed_request_ids.includes(requestId);
+          setIsRequestConfirmed(isConfirmed);
+
+          if (departResponse.data.should_depart && isConfirmed) {
+            // 요청 상태 확인
+            const requestStatusResponse = await api.get(`/ride-requests/${requestId}`);
+            if (requestStatusResponse.data && requestStatusResponse.data.status === "CONFIRMED") {
+              onRouteConfirmed();
+            }
           }
         }
       } catch (error) {
