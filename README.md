@@ -1,4 +1,5 @@
 #  RIDEWAVE PROJECT <span style="font-size:120px">:bus:</span>
+## 10/19/2024 ~ 10/20/2024
 ## 1. Introduction
 ### Purpose
 * This project aims to develop a web-based shared bus service for individuals in rural or underserved areas who face transportation challenges due to the lack of public transit options.
