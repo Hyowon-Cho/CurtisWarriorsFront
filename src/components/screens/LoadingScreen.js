@@ -91,7 +91,8 @@ const LoadingScreen = ({ onRouteConfirmed, requestId }) => {
       try {
         const requestsResponse = await api.get("/ride-requests");
         if (requestsResponse.data && Array.isArray(requestsResponse.data)) {
-          setRequestCount(requestsResponse.data.length);
+          const pendingRequests = requestsResponse.data.filter((request) => request.status === "PENDING");
+          setRequestCount(pendingRequests.length);
         }
 
         const departResponse = await api.get(`/bus-routes/should-depart`);
@@ -104,7 +105,9 @@ const LoadingScreen = ({ onRouteConfirmed, requestId }) => {
             // 요청 상태 확인
             const requestStatusResponse = await api.get(`/ride-requests/${requestId}`);
             if (requestStatusResponse.data && requestStatusResponse.data.status === "CONFIRMED") {
-              onRouteConfirmed();
+              console.log("Route confirmed, transitioning to ConfirmedRouteScreen");
+              onRouteConfirmed(departResponse.data.route_id);
+              return; // 상태가 확인되면 더 이상의 폴링을 멈춥니다.
             }
           }
         }

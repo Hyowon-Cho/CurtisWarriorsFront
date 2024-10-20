@@ -15,6 +15,7 @@ const App = () => {
   const [showConfirmedRoute, setShowConfirmedRoute] = useState(false);
   const [user, setUser] = useState(null);
   const [rideRequest, setRideRequest] = useState(null);
+  const [confirmedRouteId, setConfirmedRouteId] = useState(null);
 
   useEffect(() => {
     const savedUser = getUserFromSession();
@@ -40,10 +41,11 @@ const App = () => {
     setShowLoading(true);
   };
 
-  const handleRouteConfirmed = () => {
+  const handleRouteConfirmed = (routeId) => {
+    console.log("Route confirmed, updating state");
     setShowLoading(false);
     setShowConfirmedRoute(true);
-    // Don't clear the ride request here, as we might need it for ConfirmedRouteScreen
+    setConfirmedRouteId(routeId);
   };
 
   if (!user) {
@@ -54,7 +56,7 @@ const App = () => {
     <div>
       {!showLoading && !showConfirmedRoute && <Home onRequestRide={handleRideRequest} user={user} />}
       {showLoading && <LoadingScreen onRouteConfirmed={handleRouteConfirmed} requestId={rideRequest?.request_id} />}
-      {showConfirmedRoute && <ConfirmedRouteScreen requestId={rideRequest?.request_id} />}
+      {showConfirmedRoute && <ConfirmedRouteScreen requestId={rideRequest?.request_id} routeId={confirmedRouteId} />}
     </div>
   );
 };
