@@ -1,134 +1,137 @@
 import React, { useState, useEffect } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import api from "../../services/api";
+
+const waveAnimation = keyframes`
+  0% { transform: translateX(0) translateZ(0) scaleY(1); }
+  50% { transform: translateX(-25%) translateZ(0) scaleY(0.55); }
+  100% { transform: translateX(-50%) translateZ(0) scaleY(1); }
+`;
+
+const rotateAnimation = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
 
 const Container = styled.div`
-  width: 100vw;
-  height: 100vh;
-  background: linear-gradient(to bottom, #87ceeb, #e0f6ff);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-`;
-
-const Cloud = styled.div`
-  width: 200px;
-  height: 60px;
-  background: #fff;
-  border-radius: 200px;
-  position: absolute;
-  opacity: 0.8;
-  &:before,
-  &:after {
-    content: "";
-    position: absolute;
-    background: #fff;
-    width: 100px;
-    height: 80px;
-    position: absolute;
-    top: -15px;
-    left: 10px;
-    border-radius: 100px;
-    transform: rotate(30deg);
-  }
-  &:after {
-    width: 120px;
-    height: 120px;
-    top: -55px;
-    left: auto;
-    right: 15px;
-  }
-`;
-
-const Spinner = styled.div`
-  width: 30px;
-  height: 30px;
-  border: 4px solid #fff;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-left: 10px;  /* 텍스트와의 간격 추가 */
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-`;
-
-const MatchCompleteOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(135deg, #6c63ff, #4834d4);
+  overflow: hidden;
+  position: relative;
+`;
+
+const Content = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+`;
+
+const LoadingMessage = styled.h2`
+  font-size: 28px;
   color: white;
-  font-size: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 600;
 `;
 
-const LoadingMessage = styled.div`
-  display: flex;  /* 원통과 텍스트를 가로로 나란히 배치 */
-  justify-content: center;
-  align-items: center;
-  font-size: 32px;
-  color: #fff;
+const SubMessage = styled.div`
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 30px;
+  text-align: center;
+`;
+
+const RequestCount = styled.div`
+  font-size: 48px;
+  color: white;
   font-weight: bold;
+  margin-bottom: 10px;
 `;
 
-const LoadingScreen = ({ pickup, dropoff }) => {
-  const [isMatched, setIsMatched] = useState(false);
-  const [matchComplete, setMatchComplete] = useState(false);
-  const [pickupETA, setPickupETA] = useState(null);
-  const [dropoffETA, setDropoffETA] = useState(null);
+const RequestLabel = styled.div`
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 30px;
+`;
+
+const ProgressIndicator = styled.div`
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: ${rotateAnimation} 1s linear infinite;
+`;
+
+const Wave = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 88.7'%3E%3Cpath d='M800 56.9c-155.5 0-204.9-50-405.5-49.9-200 0-250 49.9-394.5 49.9v31.8h800v-.2-31.6z' fill='%23ffffff33'/%3E%3C/svg%3E");
+  background-position: 0 bottom;
+  background-repeat: repeat-x;
+  animation: ${waveAnimation} 10s linear infinite;
+`;
+
+const LoadingScreen = ({ onRouteConfirmed, requestId }) => {
+  const [requestCount, setRequestCount] = useState(0);
+  const [shouldDepart, setShouldDepart] = useState(false);
+  const [isRequestConfirmed, setIsRequestConfirmed] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMatched(true);
-    }, 10000);
+    const fetchData = async () => {
+      try {
+        const requestsResponse = await api.get("/ride-requests");
+        if (requestsResponse.data && Array.isArray(requestsResponse.data)) {
+          const pendingRequests = requestsResponse.data.filter((request) => request.status === "PENDING");
+          setRequestCount(pendingRequests.length);
+        }
 
-    return () => clearTimeout(timer);
-  }, []);
+        const departResponse = await api.get(`/bus-routes/should-depart`);
+        if (departResponse.data) {
+          setShouldDepart(departResponse.data.should_depart);
+          const isConfirmed = departResponse.data.confirmed_request_ids.includes(requestId);
+          setIsRequestConfirmed(isConfirmed);
 
-  useEffect(() => {
-    if (isMatched) {
-      const timer = setTimeout(() => {
-        setMatchComplete(true);
-        setPickupETA(Math.floor(Math.random() * 10) + 5);
-        setDropoffETA(Math.floor(Math.random() * 20) + 15);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [isMatched]);
+          if (departResponse.data.should_depart && isConfirmed) {
+            // 요청 상태 확인
+            const requestStatusResponse = await api.get(`/ride-requests/${requestId}`);
+            if (requestStatusResponse.data && requestStatusResponse.data.status === "CONFIRMED") {
+              console.log("Route confirmed, transitioning to ConfirmedRouteScreen");
+              onRouteConfirmed(departResponse.data.route_id);
+              return; // 상태가 확인되면 더 이상의 폴링을 멈춥니다.
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch data", error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 3000);
+    return () => clearInterval(interval);
+  }, [onRouteConfirmed, requestId]);
 
   return (
     <Container>
-      <Cloud style={{ top: "10%", left: "10%" }} />
-      <Cloud style={{ top: "30%", right: "20%" }} />
-      <Cloud style={{ bottom: "20%", left: "30%" }} />
-      
-      {!matchComplete && (
-        <LoadingMessage>
-          Loading... <Spinner /> {/* 텍스트 옆에 원통형 로딩 애니메이션 */}
-        </LoadingMessage>
-      )}
-      
-      {matchComplete && (
-        <MatchCompleteOverlay>
-          <h2>Match Complete!</h2>
-          <p>Pickup: {pickup}</p>
-          <p>Dropoff: {dropoff}</p>
-          <p>Estimated pickup time: {pickupETA} minutes</p>
-          <p>Estimated dropoff time: {dropoffETA} minutes</p>
-        </MatchCompleteOverlay>
-      )}
+      <Content>
+        <LoadingMessage>Join the wave of ride</LoadingMessage>
+        <SubMessage>We are finding your best wave</SubMessage>
+        <RequestCount>{requestCount}</RequestCount>
+        <RequestLabel>Active Ride Requests</RequestLabel>
+        <ProgressIndicator />
+      </Content>
+      <Wave />
+      <Wave style={{ opacity: 0.5, animationDuration: "15s" }} />
     </Container>
   );
 };

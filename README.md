@@ -1,10 +1,41 @@
-# Frontend
+#  RIDEWAVE PROJECT <span style="font-size:120px">:bus:</span>
+## 10/19/2024 ~ 10/20/2024
+## 1. Introduction
+### Purpose
+* This project aims to develop a web-based shared bus service for individuals in rural or underserved areas who face transportation challenges due to the lack of public transit options.
+### Goal
+* In this service, users input their departure and destination locations and specify their maximum wait time. 
+* The system then optimizes routes by coordinating with other users' requests, minimizing wait times, and calculating the most efficient routes to ensure effective bus operations.
 
-# Getting Started with Create React App
+## 2. Algorithm
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**Active Request Check:** Periodically checks all active ride requests.
 
-## Available Scripts
+**Request Grouping:** Groups requests based on proximity and travel direction using spatial indexing.
+
+**Route Generation:** Creates possible pickup and drop-off routes, ensuring the pickup-before-drop-off rule is followed.
+
+**Efficiency Calculation:** Uses Google Maps API to calculate travel time and distance for each route.
+
+**Route Selection:** Selects the most efficient route and assigns it to an available bus, considering capacity and current location.
+
+**Real-Time Updates:** Updates routes based on new requests and changes in bus location.
+
+## 3. Calculation Method
+
+**Wait Time Calculation:** Calculates how long the user has been waiting since the request was submitted. The longer the wait, the higher the priority.
+
+**Max Wait Time Consideration:** Takes into account the maximum wait time specified by the user. Requests with shorter maximum wait times are prioritized.
+
+**Route Efficiency Impact:** Evaluates how much the request affects overall route efficiency. Requests that don't significantly reduce efficiency are prioritized.
+
+**Travel Distance:** Considers the total travel distance between the pickup and drop-off points. Shorter distances are given higher priority.
+
+**Final Efficiency Score:** Combines all these factors into a final efficiency score, which is used to determine the priority of each request.
+
+</div>
+
+## 4. Installation
 
 In the project directory, you can run:
 
@@ -41,32 +72,29 @@ Instead, it will copy all the configuration files and the transitive dependencie
 
 You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+<div align="center">
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Registration
 
-### Code Splitting
+![Registration Box](your-image-path)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+</div>
 
-### Analyzing the Bundle Size
+<div align="center">
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Home
 
-### Making a Progressive Web App
+![Registration Box](your-image-path)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+</div>
 
-### Advanced Configuration
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+<div align="center">
 
-### Deployment
+## Queue
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+![Loading Box](your-image-path)
 
-### `npm run build` fails to minify
+</div>
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

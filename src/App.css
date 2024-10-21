@@ -36,3 +36,10 @@
     transform: rotate(360deg);
   }
 }
+
+.pac-container {
+  z-index: 1000 !important;
+  max-width: 90%;
+  white-space: nowrap;
+  overflow: hidden;
+}
