@@ -98,11 +98,3 @@ You don't have to ever use `eject`. The curated feature set is suitable for smal
 
 </div>
 
-## Implemented Functions
-
-- **Redux-toolkit을 이용하여 전역 상태관리**
-- **Firebase Authentication을 이용해 로그인, 회원가입 구현**
-- **PrivateRoute를 통해 로그인상태에 따라 Route 지정**
-- **Firestore를 이용해 예매 정보 저장 후 아이디 마다 티켓정보 저장**
-- **use-http (custom hook)을 이용하여 fetch해서 data받아오는 코드 재사용성있게 구현**
-- **Styled-Component - ThemeProvider를 이용해 주요 색상 및 폰트 크기 변수로 만들어 사용**
